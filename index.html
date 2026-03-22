@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>סיכום החוויה במכינה 💬</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --font: 'Heebo', sans-serif;
+    --bg: #f7f5f0;
+    --text: #1a1a2e;
+    --text-muted: #666;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(circle, #c0b8d0 1px, transparent 1px);
+    background-size: 28px 28px;
+    opacity: 0.22;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app { position: relative; z-index: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* ===== TOP NAV ===== */
+  .top-nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(247,245,240,0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 2px solid #e0d8f0;
+    padding: 10px 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .nav-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: #3d2b8c;
+    white-space: nowrap;
+  }
+
+  .nav-select-wrap {
+    position: relative;
+  }
+
+  .nav-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background: #fff;
+    border: 2px solid #c5bcf5;
+    border-radius: 99px;
+    padding: 8px 40px 8px 18px;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 700;
+    color: #3d2b8c;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 #c5bcf5;
+    outline: none;
+    transition: box-shadow 0.15s, border-color 0.15s;
+    min-width: 130px;
+    direction: rtl;
+  }
+  .nav-select:hover, .nav-select:focus {
+    box-shadow: 5px 5px 0 #c5bcf5;
+    border-color: #9c8ee8;
+  }
+  .nav-select-arrow {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #9c8ee8;
+    font-size: 12px;
+  }
+
+  .nav-progress {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  /* ===== PAGE SYSTEM ===== */
+  .pages-container { flex: 1; overflow: hidden; }
+
+  .page {
+    display: none;
+    min-height: calc(100vh - 57px);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem 1rem 3rem;
+  }
+  .page.active { display: flex; }
+
+  /* Page entrance animations */
+  .page.enter-right { animation: slideFromRight 0.38s cubic-bezier(0.4,0,0.2,1) forwards; }
+  .page.enter-left  { animation: slideFromLeft  0.38s cubic-bezier(0.4,0,0.2,1) forwards; }
+  @keyframes slideFromRight {
+    from { opacity:0; transform: translateX(60px); }
+    to   { opacity:1; transform: translateX(0); }
+  }
+  @keyframes slideFromLeft {
+    from { opacity:0; transform: translateX(-60px); }
+    to   { opacity:1; transform: translateX(0); }
+  }
+
+  /* ===== CARD ===== */
+  .card-outer {
+    width: 100%;
+    max-width: 680px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .card {
+    border-radius: 20px;
+    padding: 1.75rem;
+    border: 2px solid;
+  }
+  .card-header { display:flex; align-items:flex-start; gap:12px; margin-bottom:1.1rem; }
+  .card-icon { font-size:30px; flex-shrink:0; margin-top:2px; line-height:1; }
+  .q-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    opacity: 0.5;
+    margin-bottom: 4px;
+  }
+  .card-prompt { font-size:17px; font-weight:700; line-height:1.6; }
+
+  .responses-area {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    min-height: 32px;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+  }
+
+  .bubble {
+    border-radius: 18px 18px 18px 4px;
+    padding: 8px 14px; font-size:14px; line-height:1.5;
+    max-width:100%; word-break:break-word;
+    animation: popIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    display:flex; align-items:center; gap:6px;
+  }
+  .cloud {
+    border-radius: 40px;
+    padding: 8px 18px; font-size:14px; line-height:1.5;
+    max-width:100%; word-break:break-word;
+    animation: floatIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    display:flex; align-items:center; gap:6px;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.1);
+  }
+  .tag {
+    border-radius: 999px;
+    padding: 6px 16px; font-size:13px; font-weight:700; line-height:1.5;
+    max-width:100%; word-break:break-word;
+    animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    display:flex; align-items:center; gap:6px; letter-spacing:0.2px;
+  }
+
+  @keyframes popIn {
+    from { transform:scale(0.4); opacity:0; }
+    to   { transform:scale(1);   opacity:1; }
+  }
+  @keyframes floatIn {
+    from { transform:translateY(14px) scale(0.7); opacity:0; }
+    to   { transform:translateY(0)    scale(1);   opacity:1; }
+  }
+
+  .delete-btn {
+    font-size:11px; cursor:pointer; opacity:0.5;
+    flex-shrink:0; line-height:1;
+    border:none; background:none; padding:0;
+    font-family:var(--font); color:inherit;
+  }
+  .delete-btn:hover { opacity:1; }
+
+  .input-row { display:flex; gap:8px; }
+  .input-row input {
+    flex:1; padding:10px 16px; border-radius:99px; border:2px solid;
+    background:#fff; font-size:14px; font-family:var(--font);
+    color:var(--text); outline:none; transition:box-shadow 0.15s;
+  }
+  .input-row input::placeholder { color:#bbb; }
+  .input-row input:focus { box-shadow:0 0 0 3px rgba(0,0,0,0.07); }
+  .input-row button {
+    padding:10px 20px; border-radius:99px; border:none;
+    font-size:14px; font-family:var(--font); font-weight:700;
+    cursor:pointer; white-space:nowrap;
+    transition:transform 0.12s, opacity 0.12s;
+  }
+  .input-row button:hover { opacity:0.88; transform:scale(1.04); }
+  .input-row button:active { transform:scale(0.96); }
+
+  /* ===== BOTTOM NAVIGATION ===== */
+  .page-nav {
+    width: 100%;
+    max-width: 680px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .nav-btn {
+    padding: 11px 28px;
+    border-radius: 99px;
+    border: 2px solid #c5bcf5;
+    background: #fff;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 700;
+    color: #3d2b8c;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 #c5bcf5;
+    transition: transform 0.12s, box-shadow 0.12s, background 0.12s, opacity 0.12s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .nav-btn:hover { background: #f0eefe; transform:scale(1.04); box-shadow:5px 5px 0 #c5bcf5; }
+  .nav-btn:active { transform:scale(0.97); box-shadow:1px 1px 0 #c5bcf5; }
+  .nav-btn:disabled { opacity:0.3; pointer-events:none; }
+
+  .nav-btn.next-btn {
+    background: #3d2b8c;
+    color: #fff;
+    border-color: #3d2b8c;
+    box-shadow: 3px 3px 0 #2a1c6b;
+  }
+  .nav-btn.next-btn:hover { background:#2a1c6b; box-shadow:5px 5px 0 #1a0f4a; }
+
+  .nav-btn.finish-btn {
+    background: #3B6D11;
+    color: #fff;
+    border-color: #3B6D11;
+    box-shadow: 3px 3px 0 #2a4e0c;
+  }
+  .nav-btn.finish-btn:hover { background:#2a4e0c; box-shadow:5px 5px 0 #1a3207; }
+
+  .dot-row {
+    display: flex;
+    gap: 7px;
+    align-items: center;
+  }
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #d4caec;
+    transition: background 0.2s, transform 0.2s;
+    cursor: pointer;
+  }
+  .dot.active { background: #3d2b8c; transform: scale(1.3); }
+
+  /* ===== DONE PAGE ===== */
+  .done-page {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 57px);
+    padding: 3rem 1rem;
+    text-align: center;
+    gap: 1.5rem;
+  }
+  .done-page.active { display: flex; }
+  .done-page .done-emoji { font-size: 60px; }
+  .done-page h2 { font-size: 28px; font-weight: 800; color: #3d2b8c; }
+  .done-page p { font-size: 15px; color: var(--text-muted); max-width: 340px; }
+  .done-page .restart-btn {
+    margin-top: 0.5rem;
+    padding: 12px 32px;
+    border-radius: 99px;
+    border: 2px solid #c5bcf5;
+    background: #fff;
+    font-family: var(--font);
+    font-size: 15px;
+    font-weight: 700;
+    color: #3d2b8c;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 #c5bcf5;
+    transition: transform 0.12s, box-shadow 0.12s, background 0.12s;
+  }
+  .done-page .restart-btn:hover { background:#f0eefe; transform:scale(1.04); box-shadow:5px 5px 0 #c5bcf5; }
+
+  .done-page #doneTextarea {
+    width: 100%;
+    max-width: 480px;
+    padding: 14px 18px;
+    border-radius: 16px;
+    border: 2px solid #c5bcf5;
+    background: #fff;
+    font-family: var(--font);
+    font-size: 15px;
+    color: var(--text);
+    resize: vertical;
+    outline: none;
+    box-shadow: 3px 3px 0 #c5bcf5;
+    transition: box-shadow 0.15s, border-color 0.15s;
+    line-height: 1.6;
+    direction: rtl;
+  }
+  .done-page #doneTextarea:focus {
+    border-color: #9c8ee8;
+    box-shadow: 5px 5px 0 #c5bcf5;
+  }
+  .done-page #doneTextarea::placeholder { color: #bbb; }
+
+  /* ===== CARD THEMES ===== */
+  .theme-purple .card { background:#f0eefe; border-color:#c5bcf5; box-shadow:4px 4px 0 #c5bcf5; }
+  .theme-purple .card-prompt { color:#3d2b8c; }
+  .theme-purple .q-label { color:#3d2b8c; }
+  .theme-purple .input-row input { border-color:#c5bcf5; }
+  .theme-purple .input-row button { background:#3d2b8c; color:#fff; }
+  .theme-purple .bubble { background:#7B5EE0; color:#fff; }
+
+  .theme-teal .card { background:#e0f5ee; border-color:#7dd9b8; box-shadow:4px 4px 0 #7dd9b8; }
+  .theme-teal .card-prompt { color:#085041; }
+  .theme-teal .q-label { color:#085041; }
+  .theme-teal .input-row input { border-color:#7dd9b8; }
+  .theme-teal .input-row button { background:#0d7a61; color:#fff; }
+  .theme-teal .cloud { background:#3AC99A; color:#fff; }
+
+  .theme-coral .card { background:#faeae4; border-color:#f5aa88; box-shadow:4px 4px 0 #f5aa88; }
+  .theme-coral .card-prompt { color:#4A1B0C; }
+  .theme-coral .q-label { color:#4A1B0C; }
+  .theme-coral .input-row input { border-color:#f5aa88; }
+  .theme-coral .input-row button { background:#D85A30; color:#fff; }
+  .theme-coral .bubble { background:#D85A30; color:#fff; }
+
+  .theme-pink .card { background:#fce8f2; border-color:#f2a8c8; box-shadow:4px 4px 0 #f2a8c8; }
+  .theme-pink .card-prompt { color:#4B1528; }
+  .theme-pink .q-label { color:#4B1528; }
+  .theme-pink .input-row input { border-color:#f2a8c8; }
+  .theme-pink .input-row button { background:#993556; color:#fff; }
+  .theme-pink .tag { background:#D4537E; color:#fff; }
+
+  .theme-blue .card { background:#e4f1fb; border-color:#90c4ef; box-shadow:4px 4px 0 #90c4ef; }
+  .theme-blue .card-prompt { color:#042C53; }
+  .theme-blue .q-label { color:#042C53; }
+  .theme-blue .input-row input { border-color:#90c4ef; }
+  .theme-blue .input-row button { background:#185FA5; color:#fff; }
+  .theme-blue .bubble { background:#378ADD; color:#fff; }
+
+  .theme-amber .card { background:#fef3da; border-color:#f5c96a; box-shadow:4px 4px 0 #f5c96a; }
+  .theme-amber .card-prompt { color:#412402; }
+  .theme-amber .q-label { color:#412402; }
+  .theme-amber .input-row input { border-color:#f5c96a; }
+  .theme-amber .input-row button { background:#BA7517; color:#fff; }
+  .theme-amber .cloud { background:#EF9F27; color:#412402; }
+
+  .theme-green .card { background:#ecf7e0; border-color:#b0d87a; box-shadow:4px 4px 0 #b0d87a; }
+  .theme-green .card-prompt { color:#173404; }
+  .theme-green .q-label { color:#173404; }
+  .theme-green .input-row input { border-color:#b0d87a; }
+  .theme-green .input-row button { background:#3B6D11; color:#fff; }
+  .theme-green .tag { background:#639922; color:#fff; }
+
+  /* Custom confirm dialog */
+  .dialog-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .dialog-overlay.open { display: flex; }
+  .dialog-box {
+    background: #fff;
+    border-radius: 20px;
+    border: 2px solid #e0d8f0;
+    box-shadow: 6px 6px 0 #d4caec;
+    padding: 2rem 2rem 1.5rem;
+    max-width: 360px;
+    width: 90%;
+    text-align: center;
+    font-family: var(--font);
+  }
+  .dialog-box p { font-size: 16px; font-weight: 700; color: #3d2b8c; margin-bottom: 0.4rem; }
+  .dialog-box small { font-size: 13px; color: var(--text-muted); }
+  .dialog-actions { display: flex; gap: 10px; justify-content: center; margin-top: 1.4rem; }
+  .dialog-actions button {
+    padding: 10px 24px; border-radius: 99px; border: 2px solid;
+    font-size: 14px; font-family: var(--font); font-weight: 700;
+    cursor: pointer; transition: transform 0.12s, opacity 0.12s;
+  }
+  .dialog-actions button:hover { opacity: 0.85; transform: scale(1.04); }
+  .btn-confirm { background: #993556; border-color: #993556; color: #fff; }
+  .btn-cancel  { background: #fff; border-color: #e0d8f0; color: var(--text-muted); }
+
+  /* Clear page button */
+  .clear-page-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 0.65rem;
+    align-self: flex-end;
+    background: none;
+    border: none;
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 99px;
+    opacity: 0.6;
+    transition: opacity 0.15s, background 0.15s, color 0.15s;
+  }
+  .clear-page-btn:hover { opacity: 1; background: #fce8f2; color: #993556; }
+
+  @media (max-width:520px) {
+    .top-nav { padding: 8px 1rem; }
+    .nav-title { font-size: 13px; }
+    .card { padding:1.2rem 1rem; }
+    .card-prompt { font-size: 15px; }
+    .input-row button { padding:10px 14px; }
+    .nav-btn { padding: 10px 18px; font-size: 13px; }
+    .done-page h2 { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- TOP NAV -->
+  <nav class="top-nav">
+    <span class="nav-title">💬 סיכום החוויה במכינה</span>
+    <div class="nav-select-wrap">
+      <select class="nav-select" id="navSelect" onchange="goToPage(parseInt(this.value))">
+        <!-- populated by JS -->
+      </select>
+      <span class="nav-select-arrow">▾</span>
+    </div>
+    <span class="nav-progress" id="navProgress">1 / 7</span>
+  </nav>
+
+  <!-- PAGES -->
+  <div class="pages-container" id="pagesContainer"></div>
+
+  <!-- DONE PAGE -->
+  <div class="done-page" id="donePage">
+    <div class="done-emoji">🎉</div>
+    <h2>כל הכבוד!</h2>
+    <textarea id="doneTextarea" rows="6">תלמידים יקרים,
+כאמור לא נוותר על מפגש פנים אל פנים כפי שתכננו אבל לעת עתה נפרדים לפני היציאה לחופש פסח. 
+להתראות בינתיים❤️</textarea>
+    <button class="restart-btn" onclick="goToPage(0)">← חזרה לשאלה הראשונה</button>
+  </div>
+
+</div>
+
+<!-- Custom confirm dialog — reset all -->
+<div class="dialog-overlay" id="resetDialog">
+  <div class="dialog-box">
+    <p>למחוק את כל התגובות?</p>
+    <small>לא ניתן לשחזר את מה שנמחק</small>
+    <div class="dialog-actions">
+      <button class="btn-confirm" onclick="confirmReset()">כן, מחק הכל</button>
+      <button class="btn-cancel"  onclick="closeDialog()">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm dialog — clear single page -->
+<div class="dialog-overlay" id="clearPageDialog">
+  <div class="dialog-box">
+    <p id="clearPageTitle">למחוק תשובות לשאלה זו?</p>
+    <small>לא ניתן לשחזר את מה שנמחק</small>
+    <div class="dialog-actions">
+      <button class="btn-confirm" onclick="confirmClearPage()">כן, מחק</button>
+      <button class="btn-cancel"  onclick="closeClearPageDialog()">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm dialog — finish (clears everything) -->
+<div class="dialog-overlay" id="finishDialog">
+  <div class="dialog-box">
+    <p>לסיים ולמחוק את כל התשובות?</p>
+    <small>בלחיצה על אישור כל התשובות יימחקו</small>
+    <div class="dialog-actions">
+      <button class="btn-confirm" onclick="confirmFinish()">כן, סיים ומחק</button>
+      <button class="btn-cancel"  onclick="closeFinishDialog()">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const prompts = [
+  { text: "במהלך הלמידה במכינה למדתי על עצמי ש...",                                       theme:"purple", style:"bubble", icon:"🌱" },
+  { text: "הכי אהבתי במכינה...",                                                            theme:"teal",   style:"cloud",  icon:"⭐" },
+  { text: "דברים שעדיין קשה לי איתם במכינה הם...",                                         theme:"coral",  style:"bubble", icon:"🧗" },
+  { text: "_____ עזר לי להתמודד ולהמשיך להגיע למכינה",                                     theme:"pink",   style:"tag",    icon:"🤝" },
+  { text: "האתגר הכי גדול שהתמודדתי איתו במכינה היה...",                                   theme:"blue",   style:"bubble", icon:"🏔️" },
+  { text: "כשהתחלתי את המכינה בשפה/אנגלית/מתמטיקה היה...",                                theme:"amber",  style:"cloud",  icon:"📚" },
+  { text: "הדברים שהשתנו בי מאז שנכנסתי למכינה הם... (איך התחלתי ואיך אני מסיימ/ת)",     theme:"green",  style:"tag",    icon:"🦋" }
+];
+
+const state = prompts.map(() => []);
+let currentPage = 0;
+const total = prompts.length;
+
+/* ---- Build dropdown ---- */
+function buildNav() {
+  const sel = document.getElementById('navSelect');
+  prompts.forEach((_, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = 'שאלה ' + (i + 1);
+    sel.appendChild(opt);
+  });
+}
+
+/* ---- Build pages ---- */
+function buildPages() {
+  const container = document.getElementById('pagesContainer');
+  prompts.forEach((p, i) => {
+    const page = document.createElement('div');
+    page.className = 'page theme-' + p.theme + (i === 0 ? ' active' : '');
+    page.id = 'page-' + i;
+
+    const isLast = i === total - 1;
+
+    page.innerHTML =
+      '<div class="card-outer">' +
+        '<div class="card">' +
+          '<div class="card-header">' +
+            '<span class="card-icon">' + p.icon + '</span>' +
+            '<div>' +
+              '<div class="q-label">שאלה ' + (i + 1) + ' מתוך ' + total + '</div>' +
+              '<div class="card-prompt">' + p.text + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="responses-area" id="resp-' + i + '"></div>' +
+          '<div class="input-row">' +
+            '<input type="text" id="inp-' + i + '" placeholder="כתבו תגובה כאן..." maxlength="200" />' +
+            '<button onclick="addResponse(' + i + ')">הוסף ✦</button>' +
+          '</div>' +
+          '<button class="clear-page-btn" onclick="clearPage(' + i + ')">↺ מחק תשובות לשאלה זו</button>' +
+        '</div>' +
+
+        /* Bottom navigation */
+        '<div class="page-nav">' +
+          '<button class="nav-btn prev-btn" onclick="navigate(-1)"' + (i === 0 ? ' disabled' : '') + '>→ הקודם</button>' +
+          '<div class="dot-row" id="dots-' + i + '"></div>' +
+          (isLast
+            ? '<button class="nav-btn finish-btn" onclick="openFinishDialog()">סיום ✓</button>'
+            : '<button class="nav-btn next-btn" onclick="navigate(1)">הבא ←</button>'
+          ) +
+        '</div>' +
+
+      '</div>';
+
+    container.appendChild(page);
+
+    /* Build dot indicators */
+    const dotRow = page.querySelector('#dots-' + i);
+    prompts.forEach((_, di) => {
+      const dot = document.createElement('span');
+      dot.className = 'dot' + (di === i ? ' active' : '');
+      dot.title = 'שאלה ' + (di + 1);
+      dot.onclick = () => goToPage(di);
+      dotRow.appendChild(dot);
+    });
+
+    /* Enter key submits */
+    page.querySelector('#inp-' + i).addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') addResponse(i);
+    });
+  });
+}
+
+/* ---- Navigation ---- */
+function goToPage(index, direction) {
+  const prevIndex = currentPage;
+  const doneEl = document.getElementById('donePage');
+
+  // Hide done page if showing
+  doneEl.classList.remove('active');
+
+  if (index >= total) {
+    // Show done page
+    hideAllPages();
+    doneEl.classList.add('active');
+    currentPage = total;
+    updateNav(null);
+    return;
+  }
+
+  if (index < 0 || index > total - 1) return;
+
+  const dir = direction !== undefined ? direction : (index >= prevIndex ? 1 : -1);
+  const animClass = dir > 0 ? 'enter-left' : 'enter-right';
+
+  // Hide current
+  const prevEl = document.getElementById('page-' + prevIndex);
+  if (prevEl) {
+    prevEl.classList.remove('active', 'enter-left', 'enter-right');
+  }
+
+  currentPage = index;
+
+  // Show new
+  const nextEl = document.getElementById('page-' + index);
+  nextEl.classList.remove('enter-left', 'enter-right');
+  nextEl.classList.add('active');
+  // Trigger animation on next frame
+  requestAnimationFrame(() => {
+    nextEl.classList.add(animClass);
+  });
+
+  updateNav(index);
+
+  // Focus input
+  setTimeout(() => {
+    const inp = document.getElementById('inp-' + index);
+    if (inp) inp.focus();
+  }, 100);
+}
+
+function navigate(delta) {
+  goToPage(currentPage + delta, delta);
+}
+
+function hideAllPages() {
+  prompts.forEach((_, i) => {
+    const el = document.getElementById('page-' + i);
+    if (el) el.classList.remove('active', 'enter-left', 'enter-right');
+  });
+}
+
+function updateNav(index) {
+  const sel = document.getElementById('navSelect');
+  const prog = document.getElementById('navProgress');
+  if (index === null || index >= total) {
+    sel.value = 0;
+    prog.textContent = '✓ הסתיים';
+  } else {
+    sel.value = index;
+    prog.textContent = (index + 1) + ' / ' + total;
+  }
+}
+
+/* ---- Responses ---- */
+function renderResponses(i) {
+  const area = document.getElementById('resp-' + i);
+  if (!area) return;
+  area.innerHTML = '';
+  state[i].forEach(function(text, j) {
+    const el = document.createElement('div');
+    el.className = prompts[i].style;
+    const del = document.createElement('button');
+    del.className = 'delete-btn';
+    del.textContent = '✕';
+    del.title = 'הסר';
+    del.onclick = function() { removeResponse(i, j); };
+    const span = document.createElement('span');
+    span.textContent = text;
+    el.appendChild(del);
+    el.appendChild(span);
+    area.appendChild(el);
+  });
+}
+
+function addResponse(i) {
+  const inp = document.getElementById('inp-' + i);
+  const val = inp.value.trim();
+  if (!val) return;
+  state[i].push(val);
+  inp.value = '';
+  renderResponses(i);
+}
+
+function removeResponse(i, j) {
+  state[i].splice(j, 1);
+  renderResponses(i);
+}
+
+/* ---- Reset ---- */
+function resetAll() {
+  document.getElementById('resetDialog').classList.add('open');
+}
+function closeDialog() {
+  document.getElementById('resetDialog').classList.remove('open');
+}
+function confirmReset() {
+  state.forEach(function(arr, i) { arr.length = 0; renderResponses(i); });
+  closeDialog();
+  goToPage(0);
+}
+document.getElementById('resetDialog').addEventListener('click', function(e) {
+  if (e.target === this) closeDialog();
+});
+
+/* ---- Clear single page ---- */
+let clearTargetPage = null;
+function clearPage(i) {
+  if (state[i].length === 0) return; // nothing to clear
+  clearTargetPage = i;
+  document.getElementById('clearPageTitle').textContent = 'למחוק תשובות לשאלה ' + (i + 1) + '?';
+  document.getElementById('clearPageDialog').classList.add('open');
+}
+function closeClearPageDialog() {
+  document.getElementById('clearPageDialog').classList.remove('open');
+  clearTargetPage = null;
+}
+function confirmClearPage() {
+  if (clearTargetPage !== null) {
+    state[clearTargetPage].length = 0;
+    renderResponses(clearTargetPage);
+  }
+  closeClearPageDialog();
+}
+document.getElementById('clearPageDialog').addEventListener('click', function(e) {
+  if (e.target === this) closeClearPageDialog();
+});
+
+/* ---- Finish (clears all & shows done) ---- */
+function openFinishDialog() {
+  document.getElementById('finishDialog').classList.add('open');
+}
+function closeFinishDialog() {
+  document.getElementById('finishDialog').classList.remove('open');
+}
+function confirmFinish() {
+  state.forEach(function(arr, i) { arr.length = 0; renderResponses(i); });
+  closeFinishDialog();
+  goToPage(total);
+}
+document.getElementById('finishDialog').addEventListener('click', function(e) {
+  if (e.target === this) closeFinishDialog();
+});
+
+/* ---- Init ---- */
+buildNav();
+buildPages();
+</script>
+</body>
+</html>
