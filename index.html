@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>סיכום החוויה במכינה 💬</title>
+<title>יצירת שאלון 📝</title>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -35,8 +36,339 @@
 
   .app { position: relative; z-index: 1; display: flex; flex-direction: column; min-height: 100vh; }
 
+  /* ===== SETUP / LANDING PAGE ===== */
+  #setupPage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2.5rem 1rem;
+    gap: 2rem;
+  }
+
+  /* ── CENTERED TITLE ── */
+  .page-main-title {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .page-main-title .title-emoji { font-size: 48px; line-height: 1; }
+  .page-main-title h1 {
+    font-size: 28px;
+    font-weight: 800;
+    color: #3d2b8c;
+    line-height: 1.3;
+  }
+  .page-main-title .subtitle {
+    font-size: 15px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  #setupPage .setup-card {
+    background: #fff;
+    border-radius: 24px;
+    border: 2px solid #c5bcf5;
+    box-shadow: 6px 6px 0 #c5bcf5;
+    padding: 2.5rem 2rem;
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  #setupPage .setup-subtitle {
+    font-size: 15px;
+    color: var(--text-muted);
+  }
+  .choice-btns {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .choice-btn {
+    flex: 1;
+    min-width: 200px;
+    padding: 18px 20px;
+    border-radius: 18px;
+    border: 2px solid #c5bcf5;
+    background: #f0eefe;
+    font-family: var(--font);
+    font-size: 15px;
+    font-weight: 700;
+    color: #3d2b8c;
+    cursor: pointer;
+    box-shadow: 4px 4px 0 #c5bcf5;
+    transition: transform 0.13s, box-shadow 0.13s, background 0.13s;
+    text-align: center;
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .choice-btn .choice-icon { font-size: 32px; }
+  .choice-btn:hover { background: #e0d8ff; transform: scale(1.03); box-shadow: 6px 6px 0 #c5bcf5; }
+  .choice-btn:active { transform: scale(0.97); box-shadow: 2px 2px 0 #c5bcf5; }
+  .choice-btn.selected {
+    background: #3d2b8c;
+    color: #fff;
+    border-color: #3d2b8c;
+    box-shadow: 4px 4px 0 #2a1c6b;
+  }
+
+  /* ===== CUSTOM SETUP FORM ===== */
+  #customSetupCard {
+    display: none;
+    background: #fff;
+    border-radius: 24px;
+    border: 2px solid #c5bcf5;
+    box-shadow: 6px 6px 0 #c5bcf5;
+    padding: 2rem;
+    width: 100%;
+    max-width: 600px;
+    flex-direction: column;
+    gap: 1.4rem;
+  }
+  #customSetupCard.visible { display: flex; }
+  #customSetupCard h2 { font-size: 17px; font-weight: 800; color: #3d2b8c; }
+  .setup-field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── FIELD WITH ICON PICKER ── */
+  .field-with-icon {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .field-with-icon input[type="text"],
+  .field-with-icon textarea {
+    flex: 1;
+    padding: 11px 16px;
+    border-radius: 12px;
+    border: 2px solid #c5bcf5;
+    background: #f7f5ff;
+    font-family: var(--font);
+    font-size: 15px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    direction: rtl;
+  }
+  .field-with-icon input[type="text"]:focus,
+  .field-with-icon textarea:focus {
+    border-color: #9c8ee8;
+    box-shadow: 0 0 0 3px rgba(157,142,232,0.15);
+  }
+  .icon-picker-btn {
+    background: #f0eefe;
+    border: 2px solid #c5bcf5;
+    border-radius: 10px;
+    width: 42px;
+    height: 42px;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s, border-color 0.15s, transform 0.12s;
+    position: relative;
+    title: 'בחר אייקון';
+  }
+  .icon-picker-btn:hover { background: #e0d8ff; border-color: #9c8ee8; transform: scale(1.08); }
+
+  /* ── EMOJI PICKER PANEL ── */
+  .emoji-panel {
+    position: absolute;
+    background: #fff;
+    border: 2px solid #c5bcf5;
+    border-radius: 16px;
+    box-shadow: 6px 6px 0 #c5bcf5;
+    padding: 12px;
+    z-index: 200;
+    width: 280px;
+    display: none;
+    flex-wrap: wrap;
+    gap: 4px;
+    max-height: 240px;
+    overflow-y: auto;
+  }
+  .emoji-panel.open { display: flex; }
+  .emoji-panel .ep-emoji {
+    font-size: 22px;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 8px;
+    transition: background 0.1s, transform 0.1s;
+    line-height: 1;
+    border: none;
+    background: none;
+  }
+  .emoji-panel .ep-emoji:hover { background: #f0eefe; transform: scale(1.2); }
+  .emoji-panel .ep-category {
+    width: 100%;
+    font-size: 10px;
+    font-weight: 800;
+    color: #9c8ee8;
+    letter-spacing: 0.5px;
+    padding: 4px 4px 2px;
+    text-transform: uppercase;
+  }
+
+  /* ── SETUP FIELD (simple, no icon) ── */
+  .setup-field input[type="text"],
+  .setup-field textarea {
+    width: 100%;
+    padding: 11px 16px;
+    border-radius: 12px;
+    border: 2px solid #c5bcf5;
+    background: #f7f5ff;
+    font-family: var(--font);
+    font-size: 15px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    direction: rtl;
+  }
+  .setup-field input[type="text"]:focus,
+  .setup-field textarea:focus {
+    border-color: #9c8ee8;
+    box-shadow: 0 0 0 3px rgba(157,142,232,0.15);
+  }
+
+  .questions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .q-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    position: relative;
+  }
+  .q-row .q-num {
+    font-size: 12px;
+    font-weight: 800;
+    color: #9c8ee8;
+    min-width: 22px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .q-row input[type="text"] {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 2px solid #c5bcf5;
+    background: #f7f5ff;
+    font-family: var(--font);
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    direction: rtl;
+    transition: border-color 0.15s;
+  }
+  .q-row input[type="text"]:focus { border-color: #9c8ee8; }
+  .q-row .icon-picker-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 17px;
+    border-radius: 8px;
+  }
+  .q-row .remove-q-btn {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    color: #ccc;
+    flex-shrink: 0;
+    padding: 2px 6px;
+    border-radius: 6px;
+    transition: color 0.15s, background 0.15s;
+  }
+  .q-row .remove-q-btn:hover { color: #D85A30; background: #faeae4; }
+
+  .add-q-btn {
+    background: none;
+    border: 2px dashed #c5bcf5;
+    border-radius: 10px;
+    padding: 9px 16px;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 700;
+    color: #9c8ee8;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+    text-align: center;
+  }
+  .add-q-btn:hover { border-color: #9c8ee8; color: #3d2b8c; background: #f0eefe; }
+
+  .start-btn {
+    padding: 14px 36px;
+    border-radius: 99px;
+    border: none;
+    background: #3d2b8c;
+    color: #fff;
+    font-family: var(--font);
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 4px 4px 0 #2a1c6b;
+    transition: transform 0.13s, box-shadow 0.13s, background 0.13s;
+    align-self: flex-end;
+  }
+  .start-btn:hover { background: #2a1c6b; transform: scale(1.04); box-shadow: 6px 6px 0 #1a0f4a; }
+  .start-btn:active { transform: scale(0.97); box-shadow: 2px 2px 0 #2a1c6b; }
+
+  /* ── DOWNLOAD BUTTON ── */
+  .download-btn {
+    padding: 12px 28px;
+    border-radius: 99px;
+    border: 2px solid #3B6D11;
+    background: #fff;
+    color: #3B6D11;
+    font-family: var(--font);
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 4px 4px 0 #b0d87a;
+    transition: transform 0.13s, box-shadow 0.13s, background 0.13s;
+    align-self: flex-end;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .download-btn:hover { background: #ecf7e0; transform: scale(1.04); box-shadow: 6px 6px 0 #b0d87a; }
+  .download-btn:active { transform: scale(0.97); box-shadow: 2px 2px 0 #b0d87a; }
+
+  .action-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .setup-note {
+    font-size: 12px;
+    color: #bbb;
+    text-align: center;
+  }
+
   /* ===== TOP NAV ===== */
   .top-nav {
+    display: none;
     position: sticky;
     top: 0;
     z-index: 50;
@@ -44,23 +376,23 @@
     backdrop-filter: blur(8px);
     border-bottom: 2px solid #e0d8f0;
     padding: 10px 1.5rem;
-    display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
   }
+  .top-nav.visible { display: flex; position: sticky; }
 
   .nav-title {
-    font-size: 15px;
+    font-size: 18px;
     font-weight: 800;
     color: #3d2b8c;
     white-space: nowrap;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
   }
 
-  .nav-select-wrap {
-    position: relative;
-  }
-
+  .nav-select-wrap { position: relative; }
   .nav-select {
     appearance: none;
     -webkit-appearance: none;
@@ -79,10 +411,7 @@
     min-width: 130px;
     direction: rtl;
   }
-  .nav-select:hover, .nav-select:focus {
-    box-shadow: 5px 5px 0 #c5bcf5;
-    border-color: #9c8ee8;
-  }
+  .nav-select:hover, .nav-select:focus { box-shadow: 5px 5px 0 #c5bcf5; border-color: #9c8ee8; }
   .nav-select-arrow {
     position: absolute;
     left: 14px;
@@ -92,16 +421,11 @@
     color: #9c8ee8;
     font-size: 12px;
   }
-
-  .nav-progress {
-    font-size: 12px;
-    color: var(--text-muted);
-    font-weight: 700;
-    white-space: nowrap;
-  }
+  .nav-progress { font-size: 12px; color: var(--text-muted); font-weight: 700; white-space: nowrap; }
 
   /* ===== PAGE SYSTEM ===== */
-  .pages-container { flex: 1; overflow: hidden; }
+  .pages-container { flex: 1; overflow: hidden; display: none; }
+  .pages-container.visible { display: block; }
 
   .page {
     display: none;
@@ -113,7 +437,6 @@
   }
   .page.active { display: flex; }
 
-  /* Page entrance animations */
   .page.enter-right { animation: slideFromRight 0.38s cubic-bezier(0.4,0,0.2,1) forwards; }
   .page.enter-left  { animation: slideFromLeft  0.38s cubic-bezier(0.4,0,0.2,1) forwards; }
   @keyframes slideFromRight {
@@ -126,38 +449,16 @@
   }
 
   /* ===== CARD ===== */
-  .card-outer {
-    width: 100%;
-    max-width: 680px;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-  }
-
-  .card {
-    border-radius: 20px;
-    padding: 1.75rem;
-    border: 2px solid;
-  }
+  .card-outer { width: 100%; max-width: 680px; display: flex; flex-direction: column; gap: 1.5rem; }
+  .card { border-radius: 20px; padding: 1.75rem; border: 2px solid; }
   .card-header { display:flex; align-items:flex-start; gap:12px; margin-bottom:1.1rem; }
   .card-icon { font-size:30px; flex-shrink:0; margin-top:2px; line-height:1; }
-  .q-label {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.8px;
-    text-transform: uppercase;
-    opacity: 0.5;
-    margin-bottom: 4px;
-  }
+  .q-label { font-size:11px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; opacity:0.5; margin-bottom:4px; }
   .card-prompt { font-size:17px; font-weight:700; line-height:1.6; }
 
   .responses-area {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    min-height: 32px;
-    align-items: flex-start;
-    margin-bottom: 1rem;
+    display: flex; flex-wrap: wrap; gap: 10px;
+    min-height: 32px; align-items: flex-start; margin-bottom: 1rem;
   }
 
   .bubble {
@@ -219,116 +520,62 @@
 
   /* ===== BOTTOM NAVIGATION ===== */
   .page-nav {
-    width: 100%;
-    max-width: 680px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
+    width: 100%; max-width: 680px;
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
   }
-
   .nav-btn {
-    padding: 11px 28px;
-    border-radius: 99px;
-    border: 2px solid #c5bcf5;
-    background: #fff;
-    font-family: var(--font);
-    font-size: 14px;
-    font-weight: 700;
-    color: #3d2b8c;
-    cursor: pointer;
+    padding: 11px 28px; border-radius: 99px; border: 2px solid #c5bcf5;
+    background: #fff; font-family: var(--font); font-size: 14px;
+    font-weight: 700; color: #3d2b8c; cursor: pointer;
     box-shadow: 3px 3px 0 #c5bcf5;
     transition: transform 0.12s, box-shadow 0.12s, background 0.12s, opacity 0.12s;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    display: flex; align-items: center; gap: 6px;
   }
   .nav-btn:hover { background: #f0eefe; transform:scale(1.04); box-shadow:5px 5px 0 #c5bcf5; }
   .nav-btn:active { transform:scale(0.97); box-shadow:1px 1px 0 #c5bcf5; }
   .nav-btn:disabled { opacity:0.3; pointer-events:none; }
-
-  .nav-btn.next-btn {
-    background: #3d2b8c;
-    color: #fff;
-    border-color: #3d2b8c;
-    box-shadow: 3px 3px 0 #2a1c6b;
-  }
+  .nav-btn.next-btn { background: #3d2b8c; color: #fff; border-color: #3d2b8c; box-shadow: 3px 3px 0 #2a1c6b; }
   .nav-btn.next-btn:hover { background:#2a1c6b; box-shadow:5px 5px 0 #1a0f4a; }
-
-  .nav-btn.finish-btn {
-    background: #3B6D11;
-    color: #fff;
-    border-color: #3B6D11;
-    box-shadow: 3px 3px 0 #2a4e0c;
-  }
+  .nav-btn.finish-btn { background: #3B6D11; color: #fff; border-color: #3B6D11; box-shadow: 3px 3px 0 #2a4e0c; }
   .nav-btn.finish-btn:hover { background:#2a4e0c; box-shadow:5px 5px 0 #1a3207; }
 
-  .dot-row {
-    display: flex;
-    gap: 7px;
-    align-items: center;
-  }
+  .dot-row { display: flex; gap: 7px; align-items: center; }
   .dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
+    width: 8px; height: 8px; border-radius: 50%;
     background: #d4caec;
-    transition: background 0.2s, transform 0.2s;
-    cursor: pointer;
+    transition: background 0.2s, transform 0.2s; cursor: pointer;
   }
   .dot.active { background: #3d2b8c; transform: scale(1.3); }
 
   /* ===== DONE PAGE ===== */
   .done-page {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: calc(100vh - 57px);
-    padding: 3rem 1rem;
-    text-align: center;
-    gap: 1.5rem;
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    min-height: calc(100vh - 57px); padding: 3rem 1rem; text-align: center; gap: 1.5rem;
   }
   .done-page.active { display: flex; }
   .done-page .done-emoji { font-size: 60px; }
   .done-page h2 { font-size: 28px; font-weight: 800; color: #3d2b8c; }
   .done-page p { font-size: 15px; color: var(--text-muted); max-width: 340px; }
   .done-page .restart-btn {
-    margin-top: 0.5rem;
-    padding: 12px 32px;
-    border-radius: 99px;
-    border: 2px solid #c5bcf5;
-    background: #fff;
-    font-family: var(--font);
-    font-size: 15px;
-    font-weight: 700;
-    color: #3d2b8c;
-    cursor: pointer;
+    margin-top: 0.5rem; padding: 12px 32px;
+    border-radius: 99px; border: 2px solid #c5bcf5;
+    background: #fff; font-family: var(--font); font-size: 15px;
+    font-weight: 700; color: #3d2b8c; cursor: pointer;
     box-shadow: 3px 3px 0 #c5bcf5;
     transition: transform 0.12s, box-shadow 0.12s, background 0.12s;
   }
   .done-page .restart-btn:hover { background:#f0eefe; transform:scale(1.04); box-shadow:5px 5px 0 #c5bcf5; }
 
   .done-page #doneTextarea {
-    width: 100%;
-    max-width: 480px;
-    padding: 14px 18px;
-    border-radius: 16px;
-    border: 2px solid #c5bcf5;
-    background: #fff;
-    font-family: var(--font);
-    font-size: 15px;
-    color: var(--text);
-    resize: vertical;
-    outline: none;
+    width: 100%; max-width: 480px;
+    padding: 14px 18px; border-radius: 16px; border: 2px solid #c5bcf5;
+    background: #fff; font-family: var(--font); font-size: 15px;
+    color: var(--text); resize: vertical; outline: none;
     box-shadow: 3px 3px 0 #c5bcf5;
     transition: box-shadow 0.15s, border-color 0.15s;
-    line-height: 1.6;
-    direction: rtl;
+    line-height: 1.6; direction: rtl;
   }
-  .done-page #doneTextarea:focus {
-    border-color: #9c8ee8;
-    box-shadow: 5px 5px 0 #c5bcf5;
-  }
+  .done-page #doneTextarea:focus { border-color: #9c8ee8; box-shadow: 5px 5px 0 #c5bcf5; }
   .done-page #doneTextarea::placeholder { color: #bbb; }
 
   /* ===== CARD THEMES ===== */
@@ -383,25 +630,15 @@
 
   /* Custom confirm dialog */
   .dialog-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.35);
-    z-index: 100;
-    align-items: center;
-    justify-content: center;
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.35); z-index: 100;
+    align-items: center; justify-content: center;
   }
   .dialog-overlay.open { display: flex; }
   .dialog-box {
-    background: #fff;
-    border-radius: 20px;
-    border: 2px solid #e0d8f0;
-    box-shadow: 6px 6px 0 #d4caec;
-    padding: 2rem 2rem 1.5rem;
-    max-width: 360px;
-    width: 90%;
-    text-align: center;
-    font-family: var(--font);
+    background: #fff; border-radius: 20px; border: 2px solid #e0d8f0;
+    box-shadow: 6px 6px 0 #d4caec; padding: 2rem 2rem 1.5rem;
+    max-width: 360px; width: 90%; text-align: center; font-family: var(--font);
   }
   .dialog-box p { font-size: 16px; font-weight: 700; color: #3d2b8c; margin-bottom: 0.4rem; }
   .dialog-box small { font-size: 13px; color: var(--text-muted); }
@@ -414,25 +651,25 @@
   .dialog-actions button:hover { opacity: 0.85; transform: scale(1.04); }
   .btn-confirm { background: #993556; border-color: #993556; color: #fff; }
   .btn-cancel  { background: #fff; border-color: #e0d8f0; color: var(--text-muted); }
+  .btn-excel {
+    width: 100%;
+    padding: 11px 24px; border-radius: 99px; border: 2px solid #217346;
+    background: #fff; color: #217346;
+    font-size: 14px; font-family: var(--font); font-weight: 700;
+    cursor: pointer; transition: transform 0.12s, background 0.12s, box-shadow 0.12s;
+    box-shadow: 3px 3px 0 #b7dfc7;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .btn-excel:hover { background: #e8f5ee; transform: scale(1.03); box-shadow: 5px 5px 0 #b7dfc7; }
+  .btn-excel:active { transform: scale(0.97); box-shadow: 1px 1px 0 #b7dfc7; }
 
-  /* Clear page button */
   .clear-page-btn {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 0.65rem;
-    align-self: flex-end;
-    background: none;
-    border: none;
-    font-family: var(--font);
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text-muted);
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 99px;
-    opacity: 0.6;
-    transition: opacity 0.15s, background 0.15s, color 0.15s;
+    display: flex; align-items: center; gap: 6px;
+    margin-top: 0.65rem; align-self: flex-end;
+    background: none; border: none; font-family: var(--font);
+    font-size: 12px; font-weight: 700; color: var(--text-muted);
+    cursor: pointer; padding: 4px 8px; border-radius: 99px;
+    opacity: 0.6; transition: opacity 0.15s, background 0.15s, color 0.15s;
   }
   .clear-page-btn:hover { opacity: 1; background: #fce8f2; color: #993556; }
 
@@ -444,21 +681,95 @@
     .input-row button { padding:10px 14px; }
     .nav-btn { padding: 10px 18px; font-size: 13px; }
     .done-page h2 { font-size: 22px; }
+    .choice-btns { flex-direction: column; }
+    .page-main-title h1 { font-size: 22px; }
   }
 </style>
 </head>
 <body>
 <div class="app">
 
-  <!-- TOP NAV -->
-  <nav class="top-nav">
-    <span class="nav-title">💬 סיכום החוויה במכינה</span>
+  <!-- ===== SETUP / LANDING PAGE ===== -->
+  <div id="setupPage">
+
+    <!-- ── CENTERED TITLE ── -->
+    <div class="page-main-title">
+      <span class="title-emoji">📝</span>
+      <h1>יצירת שאלון</h1>
+      <p class="subtitle">בחרו כיצד להתחיל</p>
+    </div>
+
+    <div class="setup-card">
+      <p class="setup-subtitle">
+        רוצים להשתמש בשאלות ובכותרת המקוריות, או להתאים אישית?
+      </p>
+
+      <div class="choice-btns">
+        <button class="choice-btn" id="btnKeep" onclick="selectMode('keep')">
+          <span class="choice-icon">✅</span>
+          <span>השתמש בפורמט הנוכחי</span>
+          <span style="font-size:12px; font-weight:500; opacity:0.65;">שאלות וכותרת מוכנות</span>
+          <span class="keep-for-label" style="font-size:12px; font-weight:700; color:#9c8ee8; margin-top:2px;">עבור - סיכום החוויה במכינה</span>
+        </button>
+        <button class="choice-btn" id="btnCustom" onclick="selectMode('custom')">
+          <span class="choice-icon">✏️</span>
+          <span>התאמה אישית</span>
+          <span style="font-size:12px; font-weight:500; opacity:0.65;">צרו כותרת ושאלות חדשות</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Custom setup form -->
+    <div id="customSetupCard">
+      <h2>✏️ התאמה אישית של השאלון</h2>
+
+      <!-- Title field with icon picker -->
+      <div class="setup-field">
+        <label>כותרת השאלון</label>
+        <div class="field-with-icon" style="position:relative;">
+          <input type="text" id="customTitle" placeholder="לדוגמה: סיכום השנה שעברה..." maxlength="80" />
+          <button class="icon-picker-btn" id="titleIconBtn" onclick="togglePicker('titlePicker','titleIconBtn','customTitle')" title="הוסף אימוג׳י לכותרת">😊</button>
+          <div class="emoji-panel" id="titlePicker"></div>
+        </div>
+      </div>
+
+      <!-- Questions list -->
+      <div class="setup-field">
+        <label>שאלות</label>
+        <div class="questions-list" id="questionsList"></div>
+        <button class="add-q-btn" onclick="addQuestionField()" style="margin-top:10px;">+ הוסף שאלה</button>
+      </div>
+
+      <!-- Final note field with icon picker -->
+      <div class="setup-field">
+        <label>הערה סופית (תופיע בדף הסיום)</label>
+        <div class="field-with-icon" style="position:relative; align-items:flex-start;">
+          <textarea id="customFinalNote" rows="4" placeholder="הוסיפו כאן הערה אישית לסיום השאלון..." style="resize:vertical;"></textarea>
+          <button class="icon-picker-btn" id="finalIconBtn" onclick="togglePicker('finalPicker','finalIconBtn','customFinalNote')" title="הוסף אימוג׳י">😊</button>
+          <div class="emoji-panel" id="finalPicker"></div>
+        </div>
+      </div>
+
+      <p class="setup-note">💡 אם תוסיפו יותר מ-7 שאלות, עיצוב השאלות יחזור על עצמו מהשאלה הראשונה</p>
+
+      <div class="action-row">
+        <button class="download-btn" onclick="downloadCustomHTML()" title="הורד קובץ HTML עם השאלות שהזנת">
+          ⬇️ הורד קובץ HTML
+        </button>
+        <button class="start-btn" onclick="launchCustom()">התחל שאלון ←</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TOP NAV (hidden until quiz starts) ===== -->
+  <nav class="top-nav" id="topNav">
     <div class="nav-select-wrap">
       <select class="nav-select" id="navSelect" onchange="goToPage(parseInt(this.value))">
         <!-- populated by JS -->
       </select>
       <span class="nav-select-arrow">▾</span>
     </div>
+    <span class="nav-title" id="navTitleText">💬 סיכום החוויה במכינה</span>
     <span class="nav-progress" id="navProgress">1 / 7</span>
   </nav>
 
@@ -469,9 +780,7 @@
   <div class="done-page" id="donePage">
     <div class="done-emoji">🎉</div>
     <h2>כל הכבוד!</h2>
-    <textarea id="doneTextarea" rows="6">תלמידים יקרים,
-כאמור לא נוותר על מפגש פנים אל פנים כפי שתכננו אבל לעת עתה נפרדים לפני היציאה לחופש פסח. 
-להתראות בינתיים❤️</textarea>
+    <textarea id="doneTextarea" rows="6"></textarea>
     <button class="restart-btn" onclick="goToPage(0)">← חזרה לשאלה הראשונה</button>
   </div>
 
@@ -503,18 +812,155 @@
 
 <!-- Confirm dialog — finish (clears everything) -->
 <div class="dialog-overlay" id="finishDialog">
-  <div class="dialog-box">
+  <div class="dialog-box" style="max-width:420px;">
     <p>לסיים ולמחוק את כל התשובות?</p>
     <small>בלחיצה על אישור כל התשובות יימחקו</small>
-    <div class="dialog-actions">
-      <button class="btn-confirm" onclick="confirmFinish()">כן, סיים ומחק</button>
-      <button class="btn-cancel"  onclick="closeFinishDialog()">ביטול</button>
+    <div class="dialog-actions" style="flex-direction:column; gap:12px;">
+      <div style="display:flex; gap:10px; justify-content:center; width:100%;">
+        <button class="btn-confirm" onclick="confirmFinish()">כן, סיים ומחק</button>
+        <button class="btn-cancel"  onclick="closeFinishDialog()">ביטול</button>
+      </div>
+      <button class="btn-excel" onclick="downloadExcel()" title="הורד את השאלות והתשובות לקובץ אקסל">
+        📊 הורד כקובץ אקסל
+      </button>
     </div>
   </div>
 </div>
 
 <script>
-const prompts = [
+/* ============================================================
+   EMOJI PICKER DATA
+   ============================================================ */
+const EMOJI_CATEGORIES = {
+  'פנים ורגשות': ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','😊','😇','🥰','😍','🤩','😘','😗','😚','😙','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🥵','🥶','🥴','😵','🤯','🤠','🥳','😎','🤓','🧐','😕','😟','🙁','☹️','😮','😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿'],
+  'ידיים וגוף': ['👋','🤚','🖐️','✋','🖖','👌','🤌','🤏','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','👍','👎','✊','👊','🤛','🤜','👏','🙌','👐','🤲','🤝','🙏','✍️','💪','🦵','🦶','👀','👁️','👅','👃','👂','🧠','🦷','🦴','🫀','🫁'],
+  'טבע וצמחים': ['🌱','🌿','🍀','🌺','🌸','🌼','🌻','🌹','🌷','🌲','🌳','🌴','🎋','🎍','🍃','🍂','🍁','🍄','🌾','💐','🪴','🪸','🌵','🎄','🌈','⭐','🌟','✨','💫','⚡','🔥','🌊','💧','❄️','🌙','☀️','🌤️','⛅','🌦️','🌧️','⛈️','🌩️','🌪️','🌫️'],
+  'חיות': ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🙈','🙉','🙊','🐔','🐧','🐦','🐤','🦆','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🦋','🐛','🐌','🐞','🐜','🦟','🐢','🐍','🦖','🐳','🐬','🦭','🐟','🐠','🐡','🦈','🐙','🦑','🦀','🦞','🦐','🐡'],
+  'אוכל': ['🍎','🍊','🍋','🍇','🍓','🫐','🍈','🍒','🍑','🥭','🍍','🥥','🥝','🍅','🥑','🫛','🥦','🥬','🥒','🌽','🥕','🧅','🧄','🥔','🍠','🥐','🍞','🥖','🥨','🧀','🥚','🍳','🧈','🥞','🧇','🥓','🍗','🍖','🌮','🌯','🥙','🧆','🥗','🥘','🍲','🍜','🍝','🍣','🍱','🍛','🍚','🍙','🍘','🍢','🍡','🍧','🍨','🍦','🥧','🍰','🎂','🍮','🍭','🍬','🍫','🍿','🍩','🍪','🌰','🥜','🍯','🧃','🥛','☕','🍵','🧋','🥤','🍺','🍻','🥂','🍷','🥃','🍸','🍹'],
+  'ספורט ופעילויות': ['⚽','🏀','🏈','⚾','🥎','🎾','🏐','🏉','🥏','🎱','🪀','🏓','🏸','🏒','🥍','🏑','🏏','🪃','🥅','⛳','🎣','🤿','🎽','🎿','🛷','🥌','🎯','🪁','🏹','🎣','🤸','🏋️','🤼','🤺','🏊','🚴','🤾','🏌️','🏇','🧗','🚵','🤼','🤸','🤺','🏄','🚣','🧘','🛹','🛼'],
+  'חפצים ומשחקים': ['🎮','🕹️','🎲','🧩','🎭','🎨','🖼️','🎪','🎟️','🎠','🎡','🎢','💎','🔮','🪄','🧸','🪆','🎀','🎁','🎈','🎉','🎊','🎋','🎍','🎎','🎏','🎐','🎑','🎃','🎄','🎆','🎇','🧨','✨','🎏','🎖️','🏆','🥇','🥈','🥉','🏅','🎗️'],
+  'כלים וטכנולוגיה': ['📱','💻','🖥️','🖨️','⌨️','🖱️','🖲️','💽','💾','💿','📀','📷','📸','📹','🎥','📽️','🎞️','📞','☎️','📟','📠','📺','📻','🧭','⏱️','⏰','🕰️','⌚','📡','🔋','🔌','💡','🔦','🕯️','🗑️','🛢️','💰','💳','💵','📈','📉','📊','📋','📌','📍','✂️','🗃️','🗄️','🗂️','📁','📂','🗓️','📆','📅','📇','📰','🗞️','📓','📔','📒','📕','📗','📘','📙','📚','📖','🔖','🏷️','💰','🔑','🗝️','🔨','🪓','⛏️','⚒️','🛠️','🗡️','⚔️','🛡️','🪚','🔧','🪛','🔩','⚙️','🗜️','🔗','⛓️','🪝','🧲','🪜','🧲'],
+  'מקומות ותחבורה': ['🌍','🌎','🌏','🗺️','🧭','🏔️','⛰️','🌋','🗻','🏕️','🏖️','🏜️','🏝️','🏞️','🏟️','🏛️','🏗️','🏘️','🏙️','🏚️','🏠','🏡','🏢','🏣','🏤','🏥','🏦','🏧','🏨','🏩','🏪','🏫','🏬','🏭','🏯','🏰','💒','🗼','🗽','⛪','🕌','⛩️','🛕','🕍','⛲','🎡','🎢','🎠','🚂','🚃','🚄','🚅','🚆','🚇','🚈','🚉','🚊','🚝','🚞','🚋','🚌','🚍','🚎','🚐','🚑','🚒','🚓','🚔','🚕','🚖','🚗','🚘','🚙','🛻','🚚','🚛','🚜','🏎️','🏍️','🛵','🦽','🦼','🛺','🚲','🛴','🛹','🛼','🚏','🛣️','🛤️','⛽','🛞','🚨','🚥','🚦','🛑','🚧','⚓','🪝','⛵','🛶','🚤','🛳️','⛴️','🛥️','🚢','✈️','🛩️','🛫','🛬','🪂','💺','🚁','🚟','🚠','🚡','🛰️','🚀','🛸'],
+  'לבבות וסמלים': ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟','☮️','✝️','☪️','🕉️','☸️','✡️','🔯','🕎','☯️','☦️','🛐','⛎','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓','🆔','⚜️','🔰','♻️','✅','🆚','💯','‼️','⁉️','🔅','🔆','📶','🎵','🎶','🔇','🔈','🔉','🔊','📢','📣','🔔','🔕','📳','📴','📵','📡']
+};
+
+/* Build and populate an emoji panel */
+function buildEmojiPanel(panelId) {
+  const panel = document.getElementById(panelId);
+  if (panel.dataset.built) return;
+  panel.dataset.built = '1';
+  for (const [cat, emojis] of Object.entries(EMOJI_CATEGORIES)) {
+    const catLabel = document.createElement('div');
+    catLabel.className = 'ep-category';
+    catLabel.textContent = cat;
+    panel.appendChild(catLabel);
+    emojis.forEach(function(em) {
+      const btn = document.createElement('button');
+      btn.className = 'ep-emoji';
+      btn.textContent = em;
+      btn.title = em;
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        panel._insertTarget && insertEmoji(panel._insertTarget, em);
+        closeAllPickers();
+      });
+      panel.appendChild(btn);
+    });
+  }
+}
+
+/* Insert emoji at cursor position in an input or textarea */
+function insertEmoji(fieldId, emoji) {
+  const el = typeof fieldId === 'string' ? document.getElementById(fieldId) : fieldId;
+  if (!el) return;
+  const start = el.selectionStart;
+  const end   = el.selectionEnd;
+  const val   = el.value;
+  el.value = val.slice(0, start) + emoji + val.slice(end);
+  el.selectionStart = el.selectionEnd = start + emoji.length;
+  el.focus();
+}
+
+let _openPicker = null;
+function closeAllPickers() {
+  document.querySelectorAll('.emoji-panel.open').forEach(function(p) { p.classList.remove('open'); });
+  _openPicker = null;
+}
+
+function togglePicker(panelId, btnId, targetId) {
+  const panel = document.getElementById(panelId);
+  const btn   = document.getElementById(btnId);
+  buildEmojiPanel(panelId);
+  panel._insertTarget = targetId;
+
+  const isOpen = panel.classList.contains('open');
+  closeAllPickers();
+  if (!isOpen) {
+    panel.classList.add('open');
+    _openPicker = panelId;
+    // Position: below and aligned to button
+    positionPanel(panel, btn);
+  }
+}
+
+function positionPanel(panel, btn) {
+  const rect = btn.getBoundingClientRect();
+  const scrollY = window.scrollY;
+  // default: open below button, aligned right (RTL)
+  panel.style.top = (rect.bottom + scrollY + 6) + 'px';
+  panel.style.right = 'auto';
+  panel.style.left  = 'auto';
+  // use absolute within positioned parent
+  panel.style.position = 'absolute';
+  panel.style.top = (btn.offsetTop + btn.offsetHeight + 6) + 'px';
+  panel.style.left = 'auto';
+  panel.style.right = '0';
+}
+
+// Close pickers when clicking outside
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.emoji-panel') && !e.target.closest('.icon-picker-btn')) {
+    closeAllPickers();
+  }
+});
+
+/* For question-row pickers (dynamic) */
+function toggleQPicker(panelId, btnEl, inputEl) {
+  const panel = document.getElementById(panelId);
+  buildEmojiPanel(panelId);
+  panel._insertTarget = inputEl; // pass the actual element
+
+  const isOpen = panel.classList.contains('open');
+  closeAllPickers();
+  if (!isOpen) {
+    panel.classList.add('open');
+    _openPicker = panelId;
+    panel.style.position = 'absolute';
+    panel.style.top = (btnEl.offsetTop + btnEl.offsetHeight + 6) + 'px';
+    panel.style.right = '0';
+    panel.style.left = 'auto';
+  }
+}
+
+/* Modified insertEmoji to accept element directly */
+function insertEmojiEl(el, emoji) {
+  const start = el.selectionStart;
+  const end   = el.selectionEnd;
+  const val   = el.value;
+  el.value = val.slice(0, start) + emoji + val.slice(end);
+  el.selectionStart = el.selectionEnd = start + emoji.length;
+  el.focus();
+}
+
+/* ============================================================
+   DEFAULT DATA (original questions)
+   ============================================================ */
+const DEFAULT_TITLE = 'סיכום החוויה במכינה';
+const DEFAULT_FINAL_NOTE = `תלמידים יקרים,
+כאמור לא נוותר על מפגש פנים אל פנים כפי שתכננו אבל לעת עתה נפרדים לפני היציאה לחופש פסח. 
+להתראות בינתיים❤️`;
+
+const DEFAULT_PROMPTS = [
   { text: "במהלך הלמידה במכינה למדתי על עצמי ש...",                                       theme:"purple", style:"bubble", icon:"🌱" },
   { text: "הכי אהבתי במכינה...",                                                            theme:"teal",   style:"cloud",  icon:"⭐" },
   { text: "דברים שעדיין קשה לי איתם במכינה הם...",                                         theme:"coral",  style:"bubble", icon:"🧗" },
@@ -524,14 +970,266 @@ const prompts = [
   { text: "הדברים שהשתנו בי מאז שנכנסתי למכינה הם... (איך התחלתי ואיך אני מסיימ/ת)",     theme:"green",  style:"tag",    icon:"🦋" }
 ];
 
-const state = prompts.map(() => []);
-let currentPage = 0;
-const total = prompts.length;
+/* Theme/style cycle for custom questions (repeats after 7) */
+const THEME_CYCLE = [
+  { theme:"purple", style:"bubble", icon:"🌱" },
+  { theme:"teal",   style:"cloud",  icon:"⭐" },
+  { theme:"coral",  style:"bubble", icon:"🧗" },
+  { theme:"pink",   style:"tag",    icon:"🤝" },
+  { theme:"blue",   style:"bubble", icon:"🏔️" },
+  { theme:"amber",  style:"cloud",  icon:"📚" },
+  { theme:"green",  style:"tag",    icon:"🦋" }
+];
 
-/* ---- Build dropdown ---- */
+/* ============================================================
+   STATE
+   ============================================================ */
+let prompts = [];
+let state = [];
+let currentPage = 0;
+let total = 0;
+let currentMode = null; // 'keep' | 'custom'
+
+/* ============================================================
+   SETUP PAGE LOGIC
+   ============================================================ */
+function selectMode(mode) {
+  currentMode = mode;
+  document.getElementById('btnKeep').classList.toggle('selected', mode === 'keep');
+  document.getElementById('btnCustom').classList.toggle('selected', mode === 'custom');
+
+  const customCard = document.getElementById('customSetupCard');
+  if (mode === 'keep') {
+    customCard.classList.remove('visible');
+    launchDefault();
+  } else {
+    customCard.classList.add('visible');
+    customCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (document.getElementById('questionsList').children.length === 0) {
+      addQuestionField();
+    }
+  }
+}
+
+let questionCount = 0;
+function addQuestionField(value) {
+  questionCount++;
+  const id = questionCount;
+  const list = document.getElementById('questionsList');
+  const row = document.createElement('div');
+  row.className = 'q-row';
+  row.dataset.id = id;
+  row.style.position = 'relative';
+
+  const numSpan = document.createElement('span');
+  numSpan.className = 'q-num';
+  numSpan.textContent = list.children.length + 1;
+
+  const inp = document.createElement('input');
+  inp.type = 'text';
+  inp.placeholder = 'כתבו את השאלה כאן...';
+  inp.maxLength = 200;
+  inp.value = value || '';
+
+  const pickerBtnId = 'qpbtn-' + id;
+  const pickerPanelId = 'qppanel-' + id;
+
+  const pickerBtn = document.createElement('button');
+  pickerBtn.className = 'icon-picker-btn';
+  pickerBtn.id = pickerBtnId;
+  pickerBtn.title = 'הוסף אימוג׳י לשאלה';
+  pickerBtn.textContent = '😊';
+  pickerBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    toggleQPicker(pickerPanelId, pickerBtn, inp);
+  });
+
+  const pickerPanel = document.createElement('div');
+  pickerPanel.className = 'emoji-panel';
+  pickerPanel.id = pickerPanelId;
+  // Override insertEmoji for this panel to use element directly
+  pickerPanel.addEventListener('click', function(e) {
+    const em = e.target.dataset && e.target.classList.contains('ep-emoji') ? e.target.textContent : null;
+    if (em && pickerPanel._insertTarget) {
+      insertEmojiEl(pickerPanel._insertTarget, em);
+      closeAllPickers();
+    }
+  });
+
+  const removeBtn = document.createElement('button');
+  removeBtn.className = 'remove-q-btn';
+  removeBtn.title = 'הסר שאלה';
+  removeBtn.textContent = '✕';
+  removeBtn.addEventListener('click', function() { removeQuestionField(removeBtn); });
+
+  row.appendChild(numSpan);
+  row.appendChild(inp);
+  row.appendChild(pickerBtn);
+  row.appendChild(pickerPanel);
+  row.appendChild(removeBtn);
+
+  list.appendChild(row);
+  reNumberQuestions();
+  inp.focus();
+}
+
+function removeQuestionField(btn) {
+  btn.closest('.q-row').remove();
+  reNumberQuestions();
+}
+
+function reNumberQuestions() {
+  const rows = document.getElementById('questionsList').querySelectorAll('.q-row');
+  rows.forEach(function(row, i) {
+    row.querySelector('.q-num').textContent = (i + 1);
+  });
+}
+
+function launchDefault() {
+  prompts = DEFAULT_PROMPTS.slice();
+  document.getElementById('doneTextarea').value = DEFAULT_FINAL_NOTE;
+  document.getElementById('navTitleText').textContent = '💬 ' + DEFAULT_TITLE;
+  initQuiz();
+}
+
+function launchCustom() {
+  const titleInput = document.getElementById('customTitle').value.trim();
+  const finalNote = document.getElementById('customFinalNote').value.trim();
+  const rows = document.getElementById('questionsList').querySelectorAll('.q-row');
+  const questions = [];
+  rows.forEach(function(row) {
+    const val = row.querySelector('input[type="text"]').value.trim();
+    if (val) questions.push(val);
+  });
+
+  if (!questions.length) {
+    alert('אנא הוסיפו לפחות שאלה אחת.');
+    return;
+  }
+
+  const title = titleInput || 'השאלון שלי';
+
+  prompts = questions.map(function(q, i) {
+    const cycle = THEME_CYCLE[i % THEME_CYCLE.length];
+    return { text: q, theme: cycle.theme, style: cycle.style, icon: cycle.icon };
+  });
+
+  // Update the "keep" button label to reflect new custom title
+  const keepBtn = document.getElementById('btnKeep');
+  const forLine = keepBtn.querySelector('.keep-for-label');
+  if (forLine) {
+    forLine.textContent = 'עבור - ' + title;
+  }
+
+  document.getElementById('doneTextarea').value = finalNote || '';
+  document.getElementById('navTitleText').textContent = '💬 ' + title;
+  initQuiz();
+}
+
+/* ============================================================
+   DOWNLOAD HTML  (hardcodes user's title, questions, final note)
+   ============================================================ */
+function downloadCustomHTML() {
+  const titleInput = document.getElementById('customTitle').value.trim();
+  const finalNote  = document.getElementById('customFinalNote').value.trim();
+  const rows = document.getElementById('questionsList').querySelectorAll('.q-row');
+  const questions = [];
+  rows.forEach(function(row) {
+    const val = row.querySelector('input[type="text"]').value.trim();
+    if (val) questions.push(val);
+  });
+
+  if (!questions.length && !titleInput && !finalNote) {
+    alert('אנא מלאו לפחות כותרת או שאלה אחת לפני ההורדה.');
+    return;
+  }
+
+  const title     = titleInput || 'השאלון שלי';
+  const safeTitle = title.replace(/[\\/:*?"<>|]/g, '_');
+  const filename  = safeTitle + '.html';
+
+  // Update keep button label
+  const keepBtn = document.getElementById('btnKeep');
+  const forLine = keepBtn ? keepBtn.querySelector('.keep-for-label') : null;
+  if (forLine) forLine.textContent = 'עבור - ' + title;
+
+  // Build hardcoded prompts array JS string
+  const promptsJS = questions.map(function(q, i) {
+    const cycle = THEME_CYCLE[i % THEME_CYCLE.length];
+    const escapedQ = q.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n');
+    return '  { text: \'' + escapedQ + '\', theme:\'' + cycle.theme + '\', style:\'' + cycle.style + '\', icon:\'' + cycle.icon + '\' }';
+  }).join(',\n');
+
+  const escapedTitle     = title.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  const escapedFinalNote = finalNote.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n');
+
+  // Fetch current page source and patch the DEFAULT constants
+  const currentHTML = document.documentElement.outerHTML;
+
+  // Replace DEFAULT_TITLE
+  let patched = currentHTML.replace(
+    /const DEFAULT_TITLE = '[^']*';/,
+    "const DEFAULT_TITLE = '" + escapedTitle + "';"
+  );
+  // Replace DEFAULT_FINAL_NOTE (using backtick template literal)
+  patched = patched.replace(
+    /const DEFAULT_FINAL_NOTE = `[\s\S]*?`;/,
+    "const DEFAULT_FINAL_NOTE = `" + finalNote.replace(/`/g, '\\`') + "`;"
+  );
+  // Replace DEFAULT_PROMPTS array
+  patched = patched.replace(
+    /const DEFAULT_PROMPTS = \[[\s\S]*?\];/,
+    "const DEFAULT_PROMPTS = [\n" + promptsJS + "\n];"
+  );
+  // Also update the <title> tag
+  patched = patched.replace(
+    /<title>.*?<\/title>/,
+    '<title>' + title + '</title>'
+  );
+  // Update the visible page main title h1
+  patched = patched.replace(
+    /(<div class="page-main-title">[\s\S]*?<h1>).*?(<\/h1>)/,
+    '$1' + title + '$2'
+  );
+
+  const blob = new Blob([patched], { type: 'text/html;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function() { URL.revokeObjectURL(url); a.remove(); }, 1000);
+}
+
+/* ============================================================
+   QUIZ INIT
+   ============================================================ */
+function initQuiz() {
+  total = prompts.length;
+  state = prompts.map(function() { return []; });
+  currentPage = 0;
+
+  document.getElementById('setupPage').style.display = 'none';
+  document.getElementById('topNav').classList.add('visible');
+  document.getElementById('pagesContainer').classList.add('visible');
+
+  const container = document.getElementById('pagesContainer');
+  container.innerHTML = '';
+  const sel = document.getElementById('navSelect');
+  sel.innerHTML = '';
+
+  buildNav();
+  buildPages();
+  goToPage(0);
+}
+
+/* ============================================================
+   BUILD NAV + PAGES
+   ============================================================ */
 function buildNav() {
   const sel = document.getElementById('navSelect');
-  prompts.forEach((_, i) => {
+  prompts.forEach(function(_, i) {
     const opt = document.createElement('option');
     opt.value = i;
     opt.textContent = 'שאלה ' + (i + 1);
@@ -539,10 +1237,9 @@ function buildNav() {
   });
 }
 
-/* ---- Build pages ---- */
 function buildPages() {
   const container = document.getElementById('pagesContainer');
-  prompts.forEach((p, i) => {
+  prompts.forEach(function(p, i) {
     const page = document.createElement('div');
     page.className = 'page theme-' + p.theme + (i === 0 ? ' active' : '');
     page.id = 'page-' + i;
@@ -567,7 +1264,6 @@ function buildPages() {
           '<button class="clear-page-btn" onclick="clearPage(' + i + ')">↺ מחק תשובות לשאלה זו</button>' +
         '</div>' +
 
-        /* Bottom navigation */
         '<div class="page-nav">' +
           '<button class="nav-btn prev-btn" onclick="navigate(-1)"' + (i === 0 ? ' disabled' : '') + '>→ הקודם</button>' +
           '<div class="dot-row" id="dots-' + i + '"></div>' +
@@ -581,33 +1277,30 @@ function buildPages() {
 
     container.appendChild(page);
 
-    /* Build dot indicators */
     const dotRow = page.querySelector('#dots-' + i);
-    prompts.forEach((_, di) => {
+    prompts.forEach(function(_, di) {
       const dot = document.createElement('span');
       dot.className = 'dot' + (di === i ? ' active' : '');
       dot.title = 'שאלה ' + (di + 1);
-      dot.onclick = () => goToPage(di);
+      dot.onclick = function() { goToPage(di); };
       dotRow.appendChild(dot);
     });
 
-    /* Enter key submits */
     page.querySelector('#inp-' + i).addEventListener('keydown', function(e) {
       if (e.key === 'Enter') addResponse(i);
     });
   });
 }
 
-/* ---- Navigation ---- */
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
 function goToPage(index, direction) {
   const prevIndex = currentPage;
   const doneEl = document.getElementById('donePage');
-
-  // Hide done page if showing
   doneEl.classList.remove('active');
 
   if (index >= total) {
-    // Show done page
     hideAllPages();
     doneEl.classList.add('active');
     currentPage = total;
@@ -620,38 +1313,28 @@ function goToPage(index, direction) {
   const dir = direction !== undefined ? direction : (index >= prevIndex ? 1 : -1);
   const animClass = dir > 0 ? 'enter-left' : 'enter-right';
 
-  // Hide current
   const prevEl = document.getElementById('page-' + prevIndex);
-  if (prevEl) {
-    prevEl.classList.remove('active', 'enter-left', 'enter-right');
-  }
+  if (prevEl) prevEl.classList.remove('active', 'enter-left', 'enter-right');
 
   currentPage = index;
 
-  // Show new
   const nextEl = document.getElementById('page-' + index);
   nextEl.classList.remove('enter-left', 'enter-right');
   nextEl.classList.add('active');
-  // Trigger animation on next frame
-  requestAnimationFrame(() => {
-    nextEl.classList.add(animClass);
-  });
+  requestAnimationFrame(function() { nextEl.classList.add(animClass); });
 
   updateNav(index);
 
-  // Focus input
-  setTimeout(() => {
+  setTimeout(function() {
     const inp = document.getElementById('inp-' + index);
     if (inp) inp.focus();
   }, 100);
 }
 
-function navigate(delta) {
-  goToPage(currentPage + delta, delta);
-}
+function navigate(delta) { goToPage(currentPage + delta, delta); }
 
 function hideAllPages() {
-  prompts.forEach((_, i) => {
+  prompts.forEach(function(_, i) {
     const el = document.getElementById('page-' + i);
     if (el) el.classList.remove('active', 'enter-left', 'enter-right');
   });
@@ -669,7 +1352,9 @@ function updateNav(index) {
   }
 }
 
-/* ---- Responses ---- */
+/* ============================================================
+   RESPONSES
+   ============================================================ */
 function renderResponses(i) {
   const area = document.getElementById('resp-' + i);
   if (!area) return;
@@ -704,13 +1389,11 @@ function removeResponse(i, j) {
   renderResponses(i);
 }
 
-/* ---- Reset ---- */
-function resetAll() {
-  document.getElementById('resetDialog').classList.add('open');
-}
-function closeDialog() {
-  document.getElementById('resetDialog').classList.remove('open');
-}
+/* ============================================================
+   DIALOGS
+   ============================================================ */
+function resetAll() { document.getElementById('resetDialog').classList.add('open'); }
+function closeDialog() { document.getElementById('resetDialog').classList.remove('open'); }
 function confirmReset() {
   state.forEach(function(arr, i) { arr.length = 0; renderResponses(i); });
   closeDialog();
@@ -720,10 +1403,9 @@ document.getElementById('resetDialog').addEventListener('click', function(e) {
   if (e.target === this) closeDialog();
 });
 
-/* ---- Clear single page ---- */
 let clearTargetPage = null;
 function clearPage(i) {
-  if (state[i].length === 0) return; // nothing to clear
+  if (state[i].length === 0) return;
   clearTargetPage = i;
   document.getElementById('clearPageTitle').textContent = 'למחוק תשובות לשאלה ' + (i + 1) + '?';
   document.getElementById('clearPageDialog').classList.add('open');
@@ -743,13 +1425,8 @@ document.getElementById('clearPageDialog').addEventListener('click', function(e)
   if (e.target === this) closeClearPageDialog();
 });
 
-/* ---- Finish (clears all & shows done) ---- */
-function openFinishDialog() {
-  document.getElementById('finishDialog').classList.add('open');
-}
-function closeFinishDialog() {
-  document.getElementById('finishDialog').classList.remove('open');
-}
+function openFinishDialog() { document.getElementById('finishDialog').classList.add('open'); }
+function closeFinishDialog() { document.getElementById('finishDialog').classList.remove('open'); }
 function confirmFinish() {
   state.forEach(function(arr, i) { arr.length = 0; renderResponses(i); });
   closeFinishDialog();
@@ -759,9 +1436,59 @@ document.getElementById('finishDialog').addEventListener('click', function(e) {
   if (e.target === this) closeFinishDialog();
 });
 
-/* ---- Init ---- */
-buildNav();
-buildPages();
+/* ============================================================
+   EXCEL DOWNLOAD
+   ============================================================ */
+function downloadExcel() {
+  if (!prompts || prompts.length === 0) return;
+
+  // Find the maximum number of answers for any single question
+  var maxAnswers = 0;
+  state.forEach(function(arr) {
+    if (arr.length > maxAnswers) maxAnswers = arr.length;
+  });
+
+  // Build header row: "שאלה" + "תשובה 1", "תשובה 2", ...
+  var header = ['שאלה'];
+  for (var a = 1; a <= Math.max(maxAnswers, 1); a++) {
+    header.push('תשובה ' + a);
+  }
+
+  // Build data rows: one row per question
+  var rows = [header];
+  prompts.forEach(function(p, i) {
+    var row = [p.text];
+    var answers = state[i] || [];
+    for (var a = 0; a < header.length - 1; a++) {
+      row.push(answers[a] !== undefined ? answers[a] : '');
+    }
+    rows.push(row);
+  });
+
+  // Create workbook & worksheet
+  var wb = XLSX.utils.book_new();
+  var ws = XLSX.utils.aoa_to_sheet(rows);
+
+  // Column widths (approximate)
+  ws['!cols'] = [{ wch: 40 }];
+  for (var c = 1; c < header.length; c++) {
+    ws['!cols'].push({ wch: 25 });
+  }
+
+  // Style header row (bold) — basic cell metadata
+  var headerRange = XLSX.utils.decode_range(ws['!ref']);
+  for (var C = headerRange.s.c; C <= headerRange.e.c; C++) {
+    var cellAddr = XLSX.utils.encode_cell({ r: 0, c: C });
+    if (ws[cellAddr]) {
+      ws[cellAddr].s = { font: { bold: true }, alignment: { horizontal: 'center' } };
+    }
+  }
+
+  XLSX.utils.book_append_sheet(wb, ws, 'תשובות');
+
+  var fileName = (typeof title !== 'undefined' && title ? title : 'שאלון') + '.xlsx';
+  XLSX.writeFile(wb, fileName);
+}
 </script>
 </body>
 </html>
