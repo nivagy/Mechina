@@ -6,6 +6,8 @@
 <title>יצירת שאלון 📝</title>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -684,6 +686,185 @@
     .choice-btns { flex-direction: column; }
     .page-main-title h1 { font-size: 22px; }
   }
+
+  /* ===== INFOGRAPHIC BUTTON ===== */
+  .infographic-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border-radius: 99px;
+    border: 2px solid #9c8ee8;
+    background: #f0eefe;
+    color: #3d2b8c;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 #c5bcf5;
+    transition: transform 0.13s, box-shadow 0.13s, background 0.13s;
+    margin-top: 0.5rem;
+    align-self: flex-start;
+  }
+  .infographic-btn:hover { background: #e0d8ff; transform: scale(1.04); box-shadow: 5px 5px 0 #c5bcf5; }
+  .infographic-btn:active { transform: scale(0.97); box-shadow: 1px 1px 0 #c5bcf5; }
+
+  /* ===== INFOGRAPHIC MODAL ===== */
+  .infographic-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 300;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    overflow-y: auto;
+  }
+  .infographic-overlay.open { display: flex; }
+
+  .infographic-modal {
+    background: #fff;
+    border-radius: 24px;
+    border: 2px solid #c5bcf5;
+    box-shadow: 8px 8px 0 #c5bcf5;
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 520px;
+    font-family: var(--font);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .infographic-modal .modal-close {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    background: none;
+    border: 2px solid #e0d8f0;
+    border-radius: 50%;
+    width: 34px; height: 34px;
+    font-size: 16px;
+    cursor: pointer;
+    color: #666;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, color 0.15s;
+    font-family: var(--font);
+  }
+  .infographic-modal .modal-close:hover { background: #fce8f2; color: #993556; border-color: #f2a8c8; }
+
+  /* The visual infographic card inside modal */
+  #infographicCard {
+    border-radius: 18px;
+    padding: 1.5rem 1.25rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    direction: rtl;
+  }
+  .infographic-q-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .infographic-q-icon {
+    font-size: 36px;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .infographic-q-meta {}
+  .infographic-q-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    opacity: 0.55;
+    margin-bottom: 4px;
+  }
+  .infographic-q-text {
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.55;
+  }
+  .infographic-divider {
+    height: 2px;
+    border-radius: 2px;
+    opacity: 0.3;
+  }
+  .infographic-answers-title {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    opacity: 0.6;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .infographic-answers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .infographic-answer-chip {
+    padding: 7px 14px;
+    border-radius: 99px;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.4;
+    word-break: break-word;
+  }
+  .infographic-empty {
+    font-size: 13px;
+    opacity: 0.5;
+    font-style: italic;
+    padding: 6px 0;
+  }
+  .infographic-footer {
+    font-size: 11px;
+    opacity: 0.4;
+    text-align: left;
+    margin-top: 4px;
+  }
+
+  /* Modal action buttons */
+  .infographic-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+  .infographic-actions button {
+    padding: 9px 20px;
+    border-radius: 99px;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 2px solid;
+    transition: transform 0.12s, opacity 0.12s, box-shadow 0.12s;
+  }
+  .infographic-actions button:hover { opacity: 0.85; transform: scale(1.04); }
+  .btn-close-modal { background: #fff; border-color: #e0d8f0; color: var(--text-muted); }
+  .btn-save-infographic {
+    background: #3d2b8c; border-color: #3d2b8c; color: #fff;
+    box-shadow: 3px 3px 0 #2a1c6b;
+  }
+  .btn-save-infographic:hover { box-shadow: 5px 5px 0 #2a1c6b; }
+
+  /* PDF button in finish dialog */
+  .btn-pdf {
+    width: 100%;
+    padding: 11px 24px; border-radius: 99px; border: 2px solid #993556;
+    background: #fff; color: #993556;
+    font-size: 14px; font-family: var(--font); font-weight: 700;
+    cursor: pointer; transition: transform 0.12s, background 0.12s, box-shadow 0.12s;
+    box-shadow: 3px 3px 0 #f2a8c8;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .btn-pdf:hover { background: #fce8f2; transform: scale(1.03); box-shadow: 5px 5px 0 #f2a8c8; }
+  .btn-pdf:active { transform: scale(0.97); box-shadow: 1px 1px 0 #f2a8c8; }
+  .btn-pdf:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 </style>
 </head>
 <body>
@@ -786,6 +967,18 @@
 
 </div>
 
+<!-- INFOGRAPHIC MODAL -->
+<div class="infographic-overlay" id="infographicOverlay" onclick="closeInfographic(event)">
+  <div class="infographic-modal" id="infographicModal">
+    <button class="modal-close" onclick="closeInfographicModal()">✕</button>
+    <div id="infographicCard"></div>
+    <div class="infographic-actions">
+      <button class="btn-close-modal" onclick="closeInfographicModal()">סגור</button>
+      <button class="btn-save-infographic" onclick="saveInfographicAsPng()">⬇️ שמור כתמונה</button>
+    </div>
+  </div>
+</div>
+
 <!-- Custom confirm dialog — reset all -->
 <div class="dialog-overlay" id="resetDialog">
   <div class="dialog-box">
@@ -822,6 +1015,9 @@
       </div>
       <button class="btn-excel" onclick="downloadExcel()" title="הורד את השאלות והתשובות לקובץ אקסל">
         📊 הורד כקובץ אקסל
+      </button>
+      <button class="btn-pdf" id="btnDownloadPdf" onclick="downloadAllInfographicsPDF()" title="הורד PDF עם כל האינפוגרפיקות">
+        🖼️ הורד אינפוגרפיקות כ-PDF
       </button>
     </div>
   </div>
@@ -1261,7 +1457,10 @@ function buildPages() {
             '<input type="text" id="inp-' + i + '" placeholder="כתבו תגובה כאן..." maxlength="200" />' +
             '<button onclick="addResponse(' + i + ')">הוסף ✦</button>' +
           '</div>' +
-          '<button class="clear-page-btn" onclick="clearPage(' + i + ')">↺ מחק תשובות לשאלה זו</button>' +
+          '<div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">' +
+            '<button class="infographic-btn" onclick="openInfographic(' + i + ')">📊 אינפוגרפיקה</button>' +
+            '<button class="clear-page-btn" onclick="clearPage(' + i + ')">↺ מחק תשובות לשאלה זו</button>' +
+          '</div>' +
         '</div>' +
 
         '<div class="page-nav">' +
@@ -1435,6 +1634,315 @@ function confirmFinish() {
 document.getElementById('finishDialog').addEventListener('click', function(e) {
   if (e.target === this) closeFinishDialog();
 });
+
+/* ============================================================
+   INFOGRAPHIC  — SVG mind-map style
+   ============================================================ */
+
+const THEME_PALETTE = {
+  purple: { bg:'#f0eefe', pageBg:'#e8e2ff', border:'#9c8ee8', text:'#3d2b8c', centerFill:'#3d2b8c', centerText:'#fff', bubbleFill:'#fff', bubbleStroke:'#9c8ee8', bubbleText:'#3d2b8c', line:'#c5bcf5', tailFill:'#fff' },
+  teal:   { bg:'#e0f5ee', pageBg:'#c8ede0', border:'#3AC99A', text:'#085041', centerFill:'#0d7a61', centerText:'#fff', bubbleFill:'#fff', bubbleStroke:'#7dd9b8', bubbleText:'#085041', line:'#7dd9b8', tailFill:'#fff' },
+  coral:  { bg:'#faeae4', pageBg:'#f5d5c8', border:'#D85A30', text:'#4A1B0C', centerFill:'#D85A30', centerText:'#fff', bubbleFill:'#fff', bubbleStroke:'#f5aa88', bubbleText:'#4A1B0C', line:'#f5aa88', tailFill:'#fff' },
+  pink:   { bg:'#fce8f2', pageBg:'#f5d0e4', border:'#D4537E', text:'#4B1528', centerFill:'#993556', centerText:'#fff', bubbleFill:'#fff', bubbleStroke:'#f2a8c8', bubbleText:'#4B1528', line:'#f2a8c8', tailFill:'#fff' },
+  blue:   { bg:'#e4f1fb', pageBg:'#c8e2f5', border:'#378ADD', text:'#042C53', centerFill:'#185FA5', centerText:'#fff', bubbleFill:'#fff', bubbleStroke:'#90c4ef', bubbleText:'#042C53', line:'#90c4ef', tailFill:'#fff' },
+  amber:  { bg:'#fef3da', pageBg:'#fae4a8', border:'#EF9F27', text:'#412402', centerFill:'#BA7517', centerText:'#fff', bubbleFill:'#fff', bubbleStroke:'#f5c96a', bubbleText:'#412402', line:'#f5c96a', tailFill:'#fff' },
+  green:  { bg:'#ecf7e0', pageBg:'#d4edbb', border:'#639922', text:'#173404', centerFill:'#3B6D11', centerText:'#fff', bubbleFill:'#fff', bubbleStroke:'#b0d87a', bubbleText:'#173404', line:'#b0d87a', tailFill:'#fff' }
+};
+
+function escapeHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* Wrap text into lines fitting maxChars */
+function wrapText(text, maxChars) {
+  const words = text.split(' ');
+  const lines = [];
+  let cur = '';
+  words.forEach(function(w) {
+    if ((cur + ' ' + w).trim().length > maxChars && cur) {
+      lines.push(cur.trim());
+      cur = w;
+    } else {
+      cur = (cur + ' ' + w).trim();
+    }
+  });
+  if (cur) lines.push(cur.trim());
+  return lines;
+}
+
+/* Build the SVG string for one question — grid layout, nothing clips */
+function buildInfographicSVG(idx) {
+  const p   = prompts[idx];
+  const answers = state[idx] || [];
+  const pal = THEME_PALETTE[p.theme] || THEME_PALETTE.purple;
+  const n   = answers.length;
+
+  const W        = 620;
+  const PAD      = 22;        // outer padding
+  const COL_GAP  = 14;        // gap between columns
+  const ROW_GAP  = 12;        // gap between rows of bubbles
+  const COLS     = n <= 2 ? 1 : n <= 6 ? 2 : 3;
+  const bubbleW  = Math.floor((W - PAD * 2 - COL_GAP * (COLS - 1)) / COLS);
+  const LPAD     = 14;        // inner horizontal padding per bubble
+  const FONT_SZ  = 13;
+  const LINE_H   = 18;
+  const CHARS_PER_LINE = Math.floor((bubbleW - LPAD * 2) / (FONT_SZ * 0.58));
+
+  /* Pre-compute each bubble's wrapped lines + height */
+  const bubbles = answers.map(function(ans) {
+    const lines = wrapText(ans, Math.max(8, CHARS_PER_LINE));
+    const h     = lines.length * LINE_H + LPAD * 2;
+    return { lines: lines, h: h };
+  });
+
+  /* Lay out bubbles in COLS columns — track per-column y cursor */
+  const colX    = [];
+  for (var ci = 0; ci < COLS; ci++) colX.push(PAD + ci * (bubbleW + COL_GAP));
+  const colY    = new Array(COLS).fill(0); // relative, will offset later
+
+  const positions = bubbles.map(function(b, j) {
+    const col = j % COLS;
+    const x   = colX[col];
+    const y   = colY[col];
+    colY[col] += b.h + ROW_GAP;
+    return { x: x, y: y, col: col };
+  });
+
+  /* Height of the answers block */
+  const answersBlockH = n === 0 ? 0 : Math.max.apply(null, colY);
+
+  /* Center section geometry */
+  const labelLine = 'שאלה ' + (idx + 1) + ' מתוך ' + total;
+  const qLines    = wrapText(p.text, 32);
+  const centerH   = 36 + qLines.length * 20 + 16;  // icon row + text rows + padding
+  const centerY   = 54;   // top of center bubble (below title strip)
+  const centerBotY = centerY + centerH;
+
+  /* Connector area: short vertical stem from center bubble downward */
+  const STEM_H    = n > 0 ? 28 : 0;
+  const answersTopY = centerBotY + STEM_H;
+
+  /* Total SVG height */
+  const FOOTER_H  = 0;
+  const totalH    = answersTopY + answersBlockH + PAD + FOOTER_H;
+
+  /* Shift all answer positions down */
+  positions.forEach(function(pos) { pos.y += answersTopY; });
+
+  /* ---- Build SVG ---- */
+  const sv = [];
+
+  /* Background */
+  sv.push('<rect width="' + W + '" height="' + totalH + '" rx="22" fill="' + pal.bg + '" stroke="' + pal.border + '" stroke-width="2.5"/>');
+
+  /* Title strip */
+  sv.push('<rect x="0" y="0" width="' + W + '" height="44" rx="20" fill="' + pal.centerFill + '" opacity="0.13"/>');
+  sv.push('<rect x="0" y="22" width="' + W + '" height="22" fill="' + pal.centerFill + '" opacity="0.13"/>');
+  sv.push('<text x="' + (W/2) + '" y="28" text-anchor="middle" font-family="Heebo,Arial,sans-serif" font-size="12" font-weight="800" fill="' + pal.text + '" opacity="0.55" letter-spacing="0.5">' + escapeHtml(labelLine) + '</text>');
+
+  /* Center bubble (question) */
+  const cbX = PAD + 8, cbW = W - (PAD + 8) * 2;
+  sv.push('<rect x="' + (cbX+3) + '" y="' + (centerY+4) + '" width="' + cbW + '" height="' + centerH + '" rx="18" fill="rgba(0,0,0,0.07)"/>');
+  sv.push('<rect x="' + cbX + '" y="' + centerY + '" width="' + cbW + '" height="' + centerH + '" rx="18" fill="' + pal.centerFill + '" stroke="' + pal.border + '" stroke-width="2.5"/>');
+
+  /* Icon */
+  sv.push('<text x="' + (W/2) + '" y="' + (centerY + 30) + '" text-anchor="middle" font-size="20" font-family="Arial,sans-serif">' + p.icon + '</text>');
+
+  /* Question text */
+  const qTextStartY = centerY + 30 + 8 + (qLines.length > 1 ? 2 : 8);
+  qLines.forEach(function(line, li) {
+    sv.push('<text x="' + (W/2) + '" y="' + (qTextStartY + li * 20) + '" text-anchor="middle" ' +
+      'font-family="Heebo,Arial,sans-serif" font-size="15" font-weight="700" fill="' + pal.centerText + '">' +
+      escapeHtml(line) + '</text>');
+  });
+
+  /* Connector stem */
+  if (n > 0) {
+    const stemX = W / 2;
+    sv.push('<line x1="' + stemX + '" y1="' + centerBotY + '" x2="' + stemX + '" y2="' + (centerBotY + STEM_H) + '" stroke="' + pal.line + '" stroke-width="2.5" stroke-linecap="round"/>');
+    /* Horizontal spread line */
+    if (COLS > 1) {
+      const leftX  = positions[0].x + bubbleW / 2;
+      const rightX = positions[COLS - 1] ? positions[COLS - 1].x + bubbleW / 2 : leftX;
+      const spreadY = centerBotY + STEM_H;
+      if (rightX > leftX) {
+        sv.push('<line x1="' + leftX + '" y1="' + spreadY + '" x2="' + rightX + '" y2="' + spreadY + '" stroke="' + pal.line + '" stroke-width="2" stroke-linecap="round"/>');
+      }
+      /* Drop lines to first row of each column */
+      for (var ci2 = 0; ci2 < COLS; ci2++) {
+        const firstInCol = positions.find(function(pos) { return pos.col === ci2; });
+        if (firstInCol) {
+          const dropX = firstInCol.x + bubbleW / 2;
+          sv.push('<line x1="' + dropX + '" y1="' + spreadY + '" x2="' + dropX + '" y2="' + (firstInCol.y) + '" stroke="' + pal.line + '" stroke-width="2" stroke-linecap="round"/>');
+        }
+      }
+    }
+  }
+
+  /* Answer bubbles — connectors first (behind) */
+  if (n > 0) {
+    positions.forEach(function(pos, j) {
+      const b      = bubbles[j];
+      const bCx    = pos.x + bubbleW / 2;
+      const bTopY  = pos.y;
+
+      /* Connector from spread-line (or stem) to bubble top — only for rows > 0 within a column */
+      const sameCol = positions.filter(function(p2) { return p2.col === pos.col; });
+      const rowInCol = sameCol.indexOf(pos);
+      if (rowInCol > 0) {
+        const prevPos = sameCol[rowInCol - 1];
+        const prevBot = prevPos.y + bubbles[positions.indexOf(prevPos)].h;
+        sv.push('<line x1="' + bCx + '" y1="' + prevBot + '" x2="' + bCx + '" y2="' + bTopY + '" stroke="' + pal.line + '" stroke-width="2" stroke-linecap="round"/>');
+      }
+    });
+
+    /* Bubbles */
+    positions.forEach(function(pos, j) {
+      const b   = bubbles[j];
+      const bx  = pos.x, by = pos.y;
+      const bh  = b.h;
+      const r   = 14;
+
+      /* Shadow */
+      sv.push('<rect x="' + (bx+3) + '" y="' + (by+4) + '" width="' + bubbleW + '" height="' + bh + '" rx="' + r + '" fill="rgba(0,0,0,0.07)"/>');
+      /* Body */
+      sv.push('<rect x="' + bx + '" y="' + by + '" width="' + bubbleW + '" height="' + bh + '" rx="' + r + '" fill="' + pal.bubbleFill + '" stroke="' + pal.bubbleStroke + '" stroke-width="2"/>');
+
+      /* Text lines */
+      const textTotalH = b.lines.length * LINE_H;
+      const textStartY = by + (bh - textTotalH) / 2 + LINE_H * 0.75;
+      b.lines.forEach(function(line, li) {
+        sv.push('<text x="' + (bx + bubbleW / 2) + '" y="' + (textStartY + li * LINE_H) + '" ' +
+          'text-anchor="middle" font-family="Heebo,Arial,sans-serif" font-size="' + FONT_SZ + '" font-weight="600" fill="' + pal.bubbleText + '">' +
+          escapeHtml(line) + '</text>');
+      });
+    });
+  } else {
+    /* No answers */
+    sv.push('<text x="' + (W/2) + '" y="' + (answersTopY + 40) + '" text-anchor="middle" ' +
+      'font-family="Heebo,Arial,sans-serif" font-size="14" fill="' + pal.text + '" opacity="0.4" font-style="italic">אין תשובות עדיין</text>');
+  }
+
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + ' ' + totalH +
+    '" width="' + W + '" height="' + totalH + '">' + sv.join('') + '</svg>';
+}
+
+/* Convert SVG string → PNG data-URL via a hidden canvas */
+function svgToPngDataUrl(svgString, scale) {
+  scale = scale || 2;
+  return new Promise(function(resolve, reject) {
+    const parser = new DOMParser();
+    const doc    = parser.parseFromString(svgString, 'image/svg+xml');
+    const svgEl  = doc.documentElement;
+    const w = parseFloat(svgEl.getAttribute('width'))  || 600;
+    const h = parseFloat(svgEl.getAttribute('height')) || 520;
+
+    const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    const img  = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      canvas.width  = w * scale;
+      canvas.height = h * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(scale, scale);
+      ctx.drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = function(e) { URL.revokeObjectURL(url); reject(e); };
+    img.src = url;
+  });
+}
+
+let currentInfographicIdx = null;
+
+function openInfographic(idx) {
+  currentInfographicIdx = idx;
+  const modal = document.getElementById('infographicModal');
+
+  const svgStr = buildInfographicSVG(idx);
+
+  modal.innerHTML =
+    '<button class="modal-close" onclick="closeInfographicModal()">✕</button>' +
+    '<div id="infographicCard" style="width:100%;overflow:auto;border-radius:14px;">' +
+      svgStr.replace('<svg ', '<svg style="width:100%;height:auto;display:block;" ') +
+    '</div>' +
+    '<div class="infographic-actions">' +
+      '<button class="btn-close-modal" onclick="closeInfographicModal()">סגור</button>' +
+      '<button class="btn-save-infographic" onclick="saveInfographicAsPng()">⬇️ שמור כתמונה</button>' +
+    '</div>';
+
+  document.getElementById('infographicOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeInfographic(e) {
+  if (e.target === document.getElementById('infographicOverlay')) closeInfographicModal();
+}
+
+function closeInfographicModal() {
+  document.getElementById('infographicOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function saveInfographicAsPng() {
+  const svgStr = buildInfographicSVG(currentInfographicIdx);
+  svgToPngDataUrl(svgStr, 2).then(function(dataUrl) {
+    const link = document.createElement('a');
+    link.download = 'אינפוגרפיקה-שאלה-' + (currentInfographicIdx + 1) + '.png';
+    link.href = dataUrl;
+    link.click();
+  });
+}
+
+/* ============================================================
+   DOWNLOAD ALL INFOGRAPHICS AS PDF
+   ============================================================ */
+async function downloadAllInfographicsPDF() {
+  const btn = document.getElementById('btnDownloadPdf');
+  if (btn) { btn.disabled = true; btn.innerHTML = '⏳ מכין PDF...'; }
+
+  try {
+    const { jsPDF } = window.jspdf;
+
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const margin = 14;
+    const availW = pageW - margin * 2;
+
+    for (let i = 0; i < prompts.length; i++) {
+      const svgStr  = buildInfographicSVG(i);
+      const imgData = await svgToPngDataUrl(svgStr, 2);
+
+      /* figure out rendered dimensions */
+      const parser = new DOMParser();
+      const doc    = parser.parseFromString(svgStr, 'image/svg+xml');
+      const svgEl  = doc.documentElement;
+      const svgW   = parseFloat(svgEl.getAttribute('width'))  || 600;
+      const svgH   = parseFloat(svgEl.getAttribute('height')) || 520;
+
+      const imgH = availW * (svgH / svgW);
+      const yStart = (pageH - imgH) / 2;
+
+      if (i > 0) pdf.addPage();
+
+
+
+      pdf.addImage(imgData, 'PNG', margin, Math.max(margin, yStart), availW, imgH);
+    }
+
+    const fileName = (typeof title !== 'undefined' && title ? title : 'שאלון') + '-אינפוגרפיקות.pdf';
+    pdf.save(fileName);
+
+  } catch (err) {
+    console.error('PDF error:', err);
+    alert('אירעה שגיאה ביצירת ה-PDF:\n' + err.message);
+  }
+
+  if (btn) { btn.disabled = false; btn.innerHTML = '🖼️ הורד אינפוגרפיקות כ-PDF'; }
+}
 
 /* ============================================================
    EXCEL DOWNLOAD
